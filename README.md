@@ -7,7 +7,7 @@ A npm package of reverse-engineered Bing Image Creator API. Courtesy of [Bing Im
 ## Installation
 
 ```
-npm install bimg
+npm install bimg-new
 ```
 
 ## Usage

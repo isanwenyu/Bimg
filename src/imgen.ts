@@ -35,7 +35,7 @@ const createSession = (authCookie: string) => {
   return session;
 };
 
-const getImages = async (session: AxiosInstance, prompt: string) => {
+const getImages = async (session: AxiosInstance, prompt: string, onRedirect?: (requestId: string, redirectUrl: string) => void) => {
   console.log("Sending request...");
   const urlEncodedPrompt = querystring.escape(prompt);
 
@@ -63,6 +63,10 @@ const getImages = async (session: AxiosInstance, prompt: string) => {
   console.log("Redirected to", redirectUrl);
 
   const requestId = redirectUrl.split("id=")[1];
+  // callback requstId and redirectUrl
+  if (onRedirect){
+    onRedirect(requestId, redirectUrl);
+  }
   await session.get(redirectUrl);
 
   const pollingUrl = `${BING_URL}/images/create/async/results/${requestId}?q=${urlEncodedPrompt}`;
@@ -161,7 +165,7 @@ const saveImages = async (
   }
 };
 
-export const generateImagesLinks = async (prompt: string) => {
+export const generateImagesLinks = async (prompt: string, onRedirect?: (requestId: string, redirectUrl: string) => void) => {
   const authCookie = Config.bingImageCookie;
   const outputDir = `${Config.tempDir}/${prompt}`;
 
@@ -171,11 +175,11 @@ export const generateImagesLinks = async (prompt: string) => {
 
   // Create image generator session
   const session = createSession(authCookie);
-  const imageLinks = await getImages(session, prompt);
+  const imageLinks = await getImages(session, prompt, onRedirect);
   return imageLinks;
 };
 
-export const generateImageFiles = async (prompt: string) => {
+export const generateImageFiles = async (prompt: string, onRedirect?: (requestId: string, redirectUrl: string) => void) => {
   const authCookie = Config.bingImageCookie;
   const outputDir = `${Config.tempDir}/${prompt}`;
 
@@ -185,7 +189,7 @@ export const generateImageFiles = async (prompt: string) => {
 
   // Create image generator session
   const session = createSession(authCookie);
-  const imageLinks = await getImages(session, prompt);
+  const imageLinks = await getImages(session, prompt, onRedirect);
   await saveImages(session, imageLinks, outputDir);
 
   // Read saved images from the output directory

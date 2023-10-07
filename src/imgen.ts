@@ -126,6 +126,65 @@ const getImages = async (session: AxiosInstance, prompt: string, onRedirect?: (r
 
   return normalImageLinks;
 };
+const obtainImages = async (session: AxiosInstance, requestId: string) => {
+
+  const pollingUrl = `${BING_URL}/images/create/async/results/${requestId}`;
+
+  console.log("Waiting for results...", pollingUrl);
+  const startWait = performance.now();
+  let imagesResponse;
+
+  while (true) {
+    if (performance.now() - startWait > 300000) {
+      throw new Error("Timeout error");
+    }
+    console.log(".", { end: "", flush: true });
+    imagesResponse = await session.get(pollingUrl);
+    if (imagesResponse.status !== 200) {
+      throw new Error("Could not get results");
+    }
+    if (imagesResponse.data === "") {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      continue;
+    } else {
+      break;
+    }
+  }
+
+  if (imagesResponse.data.errorMessage === "Pending") {
+    throw new Error(
+      "This prompt has been blocked by Bing. Bing's system flagged this prompt because it may conflict with their content policy. More policy violations may lead to automatic suspension of your access."
+    );
+  } else if (imagesResponse.data.errorMessage) {
+    throw new Error(
+      "Bing returned an error: " + imagesResponse.data.errorMessage
+    );
+  }
+
+  const imageLinks = imagesResponse.data
+    .match(/src="([^"]+)"/g)
+    .map((src: string) => src.slice(5, -1));
+  const normalImageLinks: string[] = Array.from(
+    new Set(imageLinks.map((link: string) => link.split("?w=")[0]))
+  );
+
+  const badImages = [
+    "https://r.bing.com/rp/in-2zU3AJUdkgFe7ZKv19yPBHVs.png",
+    "https://r.bing.com/rp/TX9QuO3WzcCJz1uaaSwQAz39Kb0.jpg",
+  ];
+
+  for (const im of normalImageLinks) {
+    if (badImages.includes(im)) {
+      throw new Error("Bad images");
+    }
+  }
+
+  if (normalImageLinks.length === 0) {
+    throw new Error("No images");
+  }
+
+  return normalImageLinks;
+};
 
 const saveImages = async (
   session: AxiosInstance,
@@ -179,6 +238,18 @@ export const generateImagesLinks = async (prompt: string, onRedirect?: (requestI
   return imageLinks;
 };
 
+export const obtainImagesLinks = async (requestId: string) => {
+  const authCookie = Config.bingImageCookie;
+  if (!requestId ) {
+    throw new Error("Missing parameters");
+  }
+
+  // Create image generator session
+  const session = createSession(authCookie);
+  const imageLinks = await obtainImages(session, requestId);
+  return imageLinks;
+};
+
 export const generateImageFiles = async (prompt: string, onRedirect?: (requestId: string, redirectUrl: string) => void) => {
   const authCookie = Config.bingImageCookie;
   const outputDir = `${Config.tempDir}/${prompt}`;
@@ -190,6 +261,32 @@ export const generateImageFiles = async (prompt: string, onRedirect?: (requestId
   // Create image generator session
   const session = createSession(authCookie);
   const imageLinks = await getImages(session, prompt, onRedirect);
+  await saveImages(session, imageLinks, outputDir);
+
+  // Read saved images from the output directory
+  const imageFiles = fs.readdirSync(outputDir);
+  const images = imageFiles.map((filename) => {
+    const filePath = path.join(outputDir, filename);
+    const fileData = fs.readFileSync(filePath);
+    return {
+      filename,
+      data: fileData.toString("base64"),
+    };
+  });
+
+  return images;
+};
+export const obtainImageFiles = async (requestId: string) => {
+  const authCookie = Config.bingImageCookie;
+  const outputDir = `${Config.tempDir}/${requestId}`;
+
+  if (!authCookie || !requestId) {
+    throw new Error("Missing parameters");
+  }
+
+  // Create image generator session
+  const session = createSession(authCookie);
+  const imageLinks = await obtainImages(session, requestId);
   await saveImages(session, imageLinks, outputDir);
 
   // Read saved images from the output directory

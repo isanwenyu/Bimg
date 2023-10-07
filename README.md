@@ -24,7 +24,7 @@ BING_IMAGE_COOKIE: <your Bing Image Search cookie>
 ### Import the package
 
 ```
-import { generateImageFiles, generateImagesLinks } from "bimg";
+import { generateImageFiles, generateImagesLinks, obtainImageFiles, obtainImagesLinks } from "bimg";
 
 const imageLinks = await generateImagesLinks(prompt); // returns an array of 4 image links
 const imageFiles = await generateImageFiles(prompt); // returns an array of 4 image files

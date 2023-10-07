@@ -240,7 +240,7 @@ export const generateImagesLinks = async (prompt: string, onRedirect?: (requestI
 
 export const obtainImagesLinks = async (requestId: string) => {
   const authCookie = Config.bingImageCookie;
-  if (!requestId ) {
+  if (!authCookie || !requestId ) {
     throw new Error("Missing parameters");
   }
 

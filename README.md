@@ -28,6 +28,19 @@ import { generateImageFiles, generateImagesLinks } from "bimg";
 
 const imageLinks = await generateImagesLinks(prompt); // returns an array of 4 image links
 const imageFiles = await generateImageFiles(prompt); // returns an array of 4 image files
+
+const handleRedirect = (requestId: string, redirectUrl: string) => {
+  // handle redirect logic
+  console.log(`Received redirect request with ID ${requestId}. Redirecting to ${redirectUrl}.`);
+}
+// invoke generateImageFiles or generateImagesLinks function with handleRedirect callback
+const imageLinks = await generateImagesLinks(prompt, handleRedirect); // returns an array of 4 image links
+const imageFiles = await generateImageFiles(prompt, handleRedirect); // returns an array of 4 image files
+
+// obtain images by requestId
+const imageLinks = await obtainImagesLinks(requestId); // returns an array of 4 image links
+const imageFiles = await obtainImageFiles(requestId); // returns an array of 4 image files
+
 ```
 
 The image file is a object of 

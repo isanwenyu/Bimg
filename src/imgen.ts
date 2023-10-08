@@ -144,7 +144,7 @@ const obtainImages = async (session: AxiosInstance, requestId: string) => {
       throw new Error("Could not get results");
     }
     if (imagesResponse.data === "") {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       continue;
     } else {
       break;

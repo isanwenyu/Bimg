@@ -4,7 +4,7 @@ import BingImageCreator from "./BingImageCreator.js"
 
 // Default chinese to english. Currently there is no way to adopt other langs.
 // Leave to TODO
-export const createImagesFromBing = async (sentence) {
+export const createImagesFromBing = async (sentence)  => {
     // Setup the required options.
     const options = {
         // Necessary for some people in different countries, e.g. China (https://cn.bing.com)
